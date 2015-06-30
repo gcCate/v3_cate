@@ -4,7 +4,7 @@
  * User: lxh
  * Date: 15-6-13
  * Time: 下午12:17
- * Desc: 分类查看
+ * Desc: 阿里分类查看
  */
 ?>
 <html>
