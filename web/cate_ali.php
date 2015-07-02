@@ -2,16 +2,15 @@
 /**
  * Created by PhpStorm.
  * User: lxh
- * Date: 15-6-13
- * Time: 下午12:17
- * Desc: 阿里分类查看
+ * Date: 15-7-2
+ * Time: 上午10:38
  */
     error_reporting(E_ALL);
     ini_set('display_errors', 'ON');
     require "../lib/medoo.php";
     $db = new medoo(array(
         'database_type' => 'mysql',
-        'database_name' => 'v3_category',
+        'database_name' => 'v3_cate_ali',
         'server' => '192.168.8.18',
         'username' => 'root',
         'password' => 'gc7232275',
@@ -43,7 +42,7 @@
 //        }else{
 //            return array();
 //        }
-        $resArr = $db->select('cg_cateinfo', '*', array('cateid' => $db->select('cg_cate_relation', 'cateid', array('parentid' => $cateId))));
+        $resArr = $db->select('catInfo', '*', array('catsId' => $db->select('parentCatInfo', 'catsId', array('parentCatsId' => $cateId))));
         return $resArr;
     }
 ?>
@@ -68,13 +67,13 @@
     <div class="row">
         <div class="col-md-4" >
             <?php
-                echo "<select multiple class=\"form-control\" id='cate1'>";
-                if(!empty($cate1Arr)){
-                    foreach($cate1Arr as $value){
-                        echo "<option value=\"{$value['cateid']}\">{$value['catename']}</option>";
-                    }
+            echo "<select multiple class=\"form-control\" id='cate1'>";
+            if(!empty($cate1Arr)){
+                foreach($cate1Arr as $value){
+                    echo "<option value=\"{$value['catsId']}\">{$value['catsName']}</option>";
                 }
-                echo "</select>";
+            }
+            echo "</select>";
             ?>
         </div>
         <div class="col-md-4">
@@ -95,7 +94,7 @@
     $(document).ready(function(){
         $("#cate1").on('click','option',function(){
             var cate1 = $("#cate1").val();
-            $.ajax({url:"/api/cate.php?action=cate&cateId="+cate1, success:function(responseText){
+            $.ajax({url:"/api/cate_ali.php?action=cate&cateId="+cate1, success:function(responseText){
                 var res = jQuery.parseJSON(responseText);
                 $("#cate2").html(res.html);
                 $("#attr").html(res.attr);
@@ -103,14 +102,14 @@
         });
         $("#cate2").click(function(){
             var cate2 = $("#cate2").val();
-            var htmlobj=$.ajax({url:"/api/cate.php?action=cate&cateId="+cate2,async:false});
+            var htmlobj=$.ajax({url:"/api/cate_ali.php?action=cate&cateId="+cate2,async:false});
             var res = JSON.parse(htmlobj.responseText);
             $("#cate3").html(res.html);
             $("#attr").html(res.attr);
         });
         $("#cate3").click(function(){
             var cate3 = $("#cate3").val();
-            var htmlobj=$.ajax({url:"/api/cate.php?action=cate&cateId="+cate3,async:false});
+            var htmlobj=$.ajax({url:"/api/cate_ali.php?action=cate&cateId="+cate3,async:false});
             var res = JSON.parse(htmlobj.responseText);
 //            $("#cate2").html(res.html);
             $("#attr").html(res.attr);
