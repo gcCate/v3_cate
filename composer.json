@@ -9,6 +9,7 @@
     }
   ],
   "require": {
-    "twitter/bootstrap": "v3.3.5"
+    "twitter/bootstrap": "v3.3.5",
+    "components/jquery": "2.1.4"
   }
 }

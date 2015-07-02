@@ -35,10 +35,11 @@ $db_v3 = new medoo(array(
     'charset' => 'utf8',
     'option' => array(PDO::ATTR_CASE => PDO::CASE_NATURAL)
 ));
+//初始化数据库
+init();die();
 $id = 0;
+$time = microtime(true);
 while(true){
-    //初始化数据库
-    init();
     //开始处理数据
     $resArr = $db_ali->get('productAttributesInfo', '*', array('id[>]' => $id, 'ORDER' => 'id asc', 'LIMIT' => 1));
     if(empty($resArr))
@@ -61,11 +62,19 @@ function init()
 //主要处理程序
 function deal($resArr)
 {
-    global $db_ali,$db_v3;
+    global $db_ali,$db_v3,$time;
+    $db_v3->clear();
+    $db_ali->clear();
     //查看是否属于虚拟分类
-    $temp = $db_ali->get('attprepose', '*', array('catsId' => $resArr['fid'], 'LIMIT' => 1));
+    $temp = $db_ali->get('attprepose', '*', array('catsId' => $resArr['fid'], 'LIMIT'=>1));
     //查找父属性id
-    $parent = $db_ali->get(' postatrribute', '*', array('AND' => array('fid' => $resArr['fid'], 'categoryId' => $resArr['categoryId']), 'LIMIT'=>1));
+    $parent = $db_ali->get('postatrribute', '*', array('AND' => array('fid' => $resArr['fid'], 'categoryId' => $resArr['categoryId']), 'LIMIT'=>1));
+    //获取新分类
+    $cateArr = $db_v3->get('cg_cateinfo', '*', array('alicateid' => $resArr['categoryId'], 'LIMIT'=>1));
+    if(empty($cateArr)){
+        print_r($resArr);
+        die('wrong');
+    }
     $data = array(
 //        'fid',
         'fname'             => $resArr['name'],
@@ -73,7 +82,7 @@ function deal($resArr)
         'parentfid'         => !empty($parent['parentId']) ? $parent['parentId'] : 0,
         'has_childattr'     => !empty($resArr['childrenFids']) ? 1 : 0,
         'attrvalues'        => $resArr['values'],
-        'cateid'            => $resArr['categoryId'],
+        'cateid'            => $cateArr['cateid'],
         'aspect'            => $resArr['aspect'],
         'defaultvalueid'    => $resArr['defaultValueId'],
         'defaultvalue'      => $resArr['defaultValue'],
@@ -88,6 +97,7 @@ function deal($resArr)
     );
     //写入后台属性表
     $fid = $db_v3->insert('cg_attrinfo', $data);
+//    echo "5:".(microtime(true)-$time)."\r\n";
     if($fid<=0){
         print_r($db_v3->error());
         die();
@@ -96,20 +106,26 @@ function deal($resArr)
     if(!empty($resArr['values'])){
         $valArr = json_decode($resArr['values'], true);
         $keyArr = json_decode($resArr['valueIds'], true);
-        foreach($valArr as $k => $v){
-            //属性键值表
-            $data = array('vid' => $keyArr[$k], 'vname' => $v);
-            $db_v3->insert('cg_attrval_kv', $data);
-            //featureId表
-            $data = array(
-                'fid'   => $fid,
-                'fname' => $resArr['name'],
-                'vid'   => $keyArr[$k],
-                'vname' => $v,
-            );
-            $db_v3->insert('cg_frontattr_featureid', $data);
+        if(!empty($valArr)){
+            foreach($valArr as $k => $v){
+                //属性键值表
+                $data1[] = array('vid' => $keyArr[$k], 'vname' => $v);
+                //featureId表
+                $data2[] = array(
+                    'fid'   => $fid,
+                    'fname' => $resArr['name'],
+                    'vid'   => $keyArr[$k],
+                    'vname' => $v,
+                );
+
+            }
+            $db_v3->insert('cg_attrval_kv', $data1);
+            $db_v3->insert('cg_frontattr_featureid', $data2);
+        }else{
+            echo $resArr['values'];
+            print_r($valArr);
         }
-    }
+    }//echo "6:".(microtime(true)-$time)."\r\n";
 
     //阿里属性和新属性对应表
     $data = array('fid' => $fid, 'ali_fid' => $resArr['fid']);
@@ -120,11 +136,15 @@ function deal($resArr)
             'fid'           => $fid,
             'fname'         => $resArr['name'],
             'unit'          => $resArr['unit'],
-            'parentfid'     => !empty($parent['parentId']) ? $parent['parentId'] : 0,
+            'parentid'     => !empty($parent['parentId']) ? $parent['parentId'] : 0,
             'attrvalues'    => $resArr['values'],
-            'cateid'        => $resArr['categoryId'],
+            'cateid'        => $cateArr['cateid'],
             'sort'          => $resArr['order'],
         );
-        $db_v3->insert('cg_attrinfo_front', $data);
+        $i = $db_v3->insert('cg_attrinfo_front', $data);
+        if($i<=0){
+            print_r($db_v3->error());
+            die();
+        }
     }
 }
