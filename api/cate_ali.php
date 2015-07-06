@@ -23,15 +23,20 @@
     $cateId = isset($_GET['cateId']) ? intval($_GET['cateId']) : 0;
     $return = array();
     if($action == 'cate'){
-        $resArr         = getCate($cateId);
+        $resArr = getCate($cateId);
+        if(empty($resArr)){
+            //属性前置为分类
+            $temp = $db->select('attprepose', '*', array('parentId' => $cateId));
+            !empty($temp) && $resArr = $temp;
+        }
         $return['html'] = option($resArr);
-//        $return['html'] = $resArr;
-        $curCate        = getCurCate($cateId);
+        $curCate = getCurCate($cateId);
         if($curCate['isLeaf']){
             //叶子分类返回属性
             $attr = getAttr($cateId);
             $return['attr'] = attr($attr);
         }
+
     }elseif($action == 'attr'){
         $attr = getAttr($cateId);
         $return['attr'] = attr($attr);
@@ -44,7 +49,12 @@
 function getCate($cateId=0)
 {
     global $db;
-    $resArr = $db->select('catInfo', '*', array('catsId' => $db->select('parentCatInfo', 'catsId', array('parentCatsId' => $cateId))));
+    $temp = $db->select('parentCatInfo', 'catsId', array('parentCatsId' => $cateId, 'ORDER'=>'order asc'));
+    $idArr = array();
+    foreach($temp as $v){
+        $idArr[] = $v;
+    }
+    $resArr = $db->select('catInfo', '*', array('catsId' => $idArr,'ORDER' => array('catsId', $idArr)));
     return $resArr;
 }
 //获取当前分类信息
@@ -63,7 +73,11 @@ function getAttr($cateid)
     global $db;
     if($cateid<=0)
         return array();
-    $resArr = $db->select('postatrribute', '*', array('categoryId' => $cateid));
+//    $resArr = $db->select('postatrribute', '*', array('categoryId' => $cateid, 'ORDER' => 'order asc'));
+//    $resArr = $db->select('productAttributesInfo', '*', array('categoryId' => $cateid, 'ORDER' => 'order asc'));
+    //按属性、规格、交易属性区分、排序时必填属性考前
+    $resArr['attr'] = $db->select('postatrribute', '*',
+        array('AND'=>array('categoryId' => $cateid, ), 'ORDER' => 'keyAttr desc,order asc'));
     return $resArr;
 }
 //分类html
@@ -80,16 +94,23 @@ function option($arr)
 //属性html
 function attr($arr)
 {
-    $html = '';
+    $html = '<form class="form-horizontal">';
     foreach($arr as $value)
     {
-        $html .= "<div class=\"col-md-4\">";
+        $html .= "<div class=\"form-group\"><label class=\"col-sm-2 control-label\">{$value['name']}</label><div class=\"col-sm-10\">";
         if(in_array($value['showType'], array(-1,0))){
             //文本输入框
-            $html .= "<div class=\"form-group\"><label>{$value['name']}</label><input></div>";
+            $html .= "<input>";
+        }elseif($value['showType']==1) {
+            $html .="<select class=\"form-control\">";
+            $attrvalue = json_decode($value['featureIdValues'], true);
+            foreach($attrvalue as $v){
+                $html .= "<option value=\"{$v['vid']}\">{$v['value']}</option>";
+            }
+            $html .= "</select>";
         }elseif($value['showType']==2){
             //多选
-            $html .= "<div class=\"checkbox\"><label>{$value['name']}</label>";
+            $html .= "<div class=\"checkbox\">";
             $attrvalue = json_decode($value['featureIdValues'], true);
             foreach($attrvalue as $v){
                 $html .= "<label><input type=\"checkbox\" value=\"{$v['vid']}\">{$v['value']}</label>";
@@ -97,14 +118,15 @@ function attr($arr)
             $html .= "</div>";
         }elseif($value['showType']==3){
             //单选
-            $html .= "<div class=\"radio\"><label>{$value['name']}</label>";
+            $html .= "<div class=\"radio\">";
             $attrvalue = json_decode($value['featureIdValues'], true);
             foreach($attrvalue as $v){
                 $html .= "<label><input type=\"radio\" name=\"{$value['name']}\" value=\"{$v['vid']}\">{$v['value']}</label>";
             }
             $html .= "</div>";
         }
-        $html .="</div>";
+        $html .="</div></div>";
     }
+    $html .="</form>";
     return $html;
 }

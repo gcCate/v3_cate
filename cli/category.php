@@ -6,6 +6,7 @@
  * Time: 下午4:50
  * Desc:  属性的属性，子属性
  */
+die();
 error_reporting(E_ALL);
 ini_set('display_errors', 'ON');
 require "../lib/medoo.php";

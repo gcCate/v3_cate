@@ -2,9 +2,9 @@
 /**
  * Created by PhpStorm.
  * User: lxh
- * Date: 15-6-18
- * Time: 下午4:50
- * Desc:  属性的属性，子属性
+ * Date: 15-7-3
+ * Time: 下午2:07
+ * Desc: 补充采集三级子属性
  */
 die();
 error_reporting(E_ALL);
@@ -27,49 +27,22 @@ $db = new medoo(array(
 $id = 0;
 while(true) {
     echo 'id:' . $id . "\r\n";
-    //获取叶子类目
-    $where = array('AND' => array('catsId[>]'=>$id, 'leaf'=>1), 'ORDER' => 'catsId asc', 'LIMIT' => 1);
-    $resArr = $db->get('offercatsInfo', '*', $where);
-    if (empty($resArr)) {
-        die('over!\r\n');
+    $resArr = $db->get('CategoryFeature', '*', array('id[>]'=>$id,'ORDER'=>'id asc','LIMIT'=>1));
+    if(empty($resArr)){
+        die("Over!\r\n");
+    }else{
+        $id = $resArr['id'];
     }
-    $id = $resArr['catsId'];
-    //获取叶子类目的属性
-    $where = array('AND' => array('categoryId' => $resArr['catsId'], 'childrenFids[!]' => ''));
-    $res = $db->select('postatrribute', '*', $where);
-    if(!empty($res)){
-        foreach($res as $value){
-            if(!empty($value['childrenFids'])){
-//                $value['featureIdValues'] = preg_replace('/u([0-9a-f]{4})/', "\\u$1", $value['featureIdValues']);
-                $feaArr = json_decode($value['featureIdValues'], true);
-                $chilArr = json_decode($value['childrenFids'], true);
-                if(empty($chilArr)) continue;
-                foreach($feaArr as $fea){
-                    $str = "{$value['fid']}:{$fea['vid']}";echo $str,"\r\n";
-                    $r = getInfo($resArr['catsId'], $str);
-                    if(!isset($r['categoryFeatures'])){
-                        print_r($r);//die();
-                    }
-                    $i = insert($r['categoryFeatures'], $resArr['catsId'], $fea['vid']);
-                    //如果还有子属性，继续采集 最大id 5249
-//                    foreach($chilArr as $v){
-//                        $t = $db->get('postatrribute', '*', array('fid' => $v));
-//                        if(isset($t['childrenFids']) && !empty($t['childrenFids'])){
-//                            $t['featureIdValues'] = preg_replace('/u([0-9a-f]{4})/', "\\u$1", $t['featureIdValues']);
-//                            $a = json_decode($t['featureIdValues'], true);
-//                            foreach($a as $aa){
-//                                $str = "{$value['fid']}:{$fea['vid']}>$v:{$aa['vid']}";echo $str,"\r\n";
-//                                $r = getInfo($resArr['catsId'], $str);
-//                                $i = insert($r['categoryFeatures']);
-//                            }
-//                        }
-//                    }
-                }
-            }else{
-                continue;
-            }
+    $children = json_decode($resArr['childrenFids'], true);
+    if(!empty($children)){
+        $feaValArr = json_decode($resArr['featureIdValues'], true);
+        foreach($feaValArr as $value){
+            $keyStr = "{$resArr['parentId']}:{$resArr['valueId']}>{$resArr['fid']}:{$value['vid']}";
+            $result = getInfo($resArr['categoryId'], $keyStr);
+            insert($result['categoryFeatures'], $resArr['categoryId'], $value['vid']);
         }
     }
+    $db->clear();
 }
 function insert($data, $categoryId, $vid)
 {

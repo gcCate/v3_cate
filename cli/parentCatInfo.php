@@ -17,16 +17,17 @@ $id = 0;
 while(true){
     $sql = "select * from catInfo where id>{$id} order by id asc limit 1 ";
     $res = mysql_query($sql, $conn);
-    $row = mysql_fetch_array($res, MYSQL_ASSOC);print_r($row);
+    $row = mysql_fetch_array($res, MYSQL_ASSOC);//print_r($row);
     if(empty($row)){
         die("over:{$id}");
-    }
+    }else
+        $id = $row['id'];
+    echo $id,"\r\n";
     $parentArr = json_decode($row['parentCats'], true);
 
     foreach($parentArr as $value){
         $sql = "insert into parentCatInfo (catsId,parentCatsId,`order`) VALUE ({$row['catsId']}, {$value['parentCatsId']}, {$value['order']})";
-        echo $sql;
+//        echo $sql;
         mysql_query($sql, $conn);
     }
-    $id++;
 }

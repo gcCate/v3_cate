@@ -6,18 +6,19 @@
  * Time: 下午3:10
  * Desc:  阿里发布属性处理到表中
  */
+die();
 error_reporting(E_ALL);
 ini_set('display_errors', 'ON');
 require "../lib/medoo.php";
 $db_ali = new medoo(array(
     'database_type' => 'mysql',
     'database_name' => 'v3_cate_ali',
-    'server' => '192.168.8.18',
-    'username' => 'root',
-    'password' => 'gc7232275',
-//    'server' => '127.0.0.1',
+//    'server' => '192.168.8.18',
 //    'username' => 'root',
-//    'password' => '123456',
+//    'password' => 'gc7232275',
+    'server' => '127.0.0.1',
+    'username' => 'root',
+    'password' => '123456',
     'port' => 3306,
     'charset' => 'utf8',
     'option' => array(PDO::ATTR_CASE => PDO::CASE_NATURAL)
@@ -25,18 +26,18 @@ $db_ali = new medoo(array(
 $db_v3 = new medoo(array(
     'database_type' => 'mysql',
     'database_name' => 'v3_category',
-    'server' => '192.168.8.18',
-    'username' => 'root',
-    'password' => 'gc7232275',
-//    'server' => '127.0.0.1',
+//    'server' => '192.168.8.18',
 //    'username' => 'root',
-//    'password' => '123456',
+//    'password' => 'gc7232275',
+    'server' => '127.0.0.1',
+    'username' => 'root',
+    'password' => '123456',
     'port' => 3306,
     'charset' => 'utf8',
     'option' => array(PDO::ATTR_CASE => PDO::CASE_NATURAL)
 ));
 //初始化数据库
-init();die();
+init();
 $id = 0;
 $time = microtime(true);
 while(true){
@@ -49,6 +50,8 @@ while(true){
     echo $id,"\r\n";
     deal($resArr);
 }
+
+
 //初始化，将新表清空
 function init()
 {
@@ -81,7 +84,7 @@ function deal($resArr)
         'unit'              => $resArr['unit'],
         'parentfid'         => !empty($parent['parentId']) ? $parent['parentId'] : 0,
         'has_childattr'     => !empty($resArr['childrenFids']) ? 1 : 0,
-        'attrvalues'        => $resArr['values'],
+        'attrvalues'        => $parent['featureIdValues'],
         'cateid'            => $cateArr['cateid'],
         'aspect'            => $resArr['aspect'],
         'defaultvalueid'    => $resArr['defaultValueId'],
@@ -128,7 +131,7 @@ function deal($resArr)
     }//echo "6:".(microtime(true)-$time)."\r\n";
 
     //阿里属性和新属性对应表
-    $data = array('fid' => $fid, 'ali_fid' => $resArr['fid']);
+    $data = array('fid' => $fid, 'ali_fid' => $resArr['id']);
     $db_v3->insert('attr_new_ali', $data);
     //将选择类，作为前台属性表
     if(in_array($resArr['showType'], array(1,2,3))){

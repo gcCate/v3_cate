@@ -42,7 +42,12 @@
 //        }else{
 //            return array();
 //        }
-        $resArr = $db->select('catInfo', '*', array('catsId' => $db->select('parentCatInfo', 'catsId', array('parentCatsId' => $cateId))));
+        $temp = $db->select('parentCatInfo', 'catsId', array('parentCatsId' => $cateId, 'ORDER'=>'order asc'));
+        $idArr = array();
+        foreach($temp as $v){
+            $idArr[] = $v;
+        }
+        $resArr = $db->select('catInfo', '*', array('catsId' => $idArr,'ORDER' => array('catsId', $idArr)));
         return $resArr;
     }
 ?>
@@ -65,7 +70,7 @@
 
     </div>
     <div class="row">
-        <div class="col-md-4" >
+        <div class="col-md-3" >
             <?php
             echo "<select multiple class=\"form-control\" id='cate1'>";
             if(!empty($cate1Arr)){
@@ -76,13 +81,18 @@
             echo "</select>";
             ?>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <select multiple class="form-control" id="cate2">
 
             </select>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <select multiple class="form-control" id="cate3">
+
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select multiple class="form-control" id="cate4">
 
             </select>
         </div>
@@ -97,21 +107,24 @@
             $.ajax({url:"/api/cate_ali.php?action=cate&cateId="+cate1, success:function(responseText){
                 var res = jQuery.parseJSON(responseText);
                 $("#cate2").html(res.html);
+                $("#cate3").empty();
+                $("#cate4").empty();
                 $("#attr").html(res.attr);
             }});
         });
-        $("#cate2").click(function(){
+        $("#cate2").on('click', 'option', function(){
             var cate2 = $("#cate2").val();
             var htmlobj=$.ajax({url:"/api/cate_ali.php?action=cate&cateId="+cate2,async:false});
             var res = JSON.parse(htmlobj.responseText);
             $("#cate3").html(res.html);
+            $("#cate4").empty();
             $("#attr").html(res.attr);
         });
-        $("#cate3").click(function(){
+        $("#cate3").on('click', 'option', function(){
             var cate3 = $("#cate3").val();
             var htmlobj=$.ajax({url:"/api/cate_ali.php?action=cate&cateId="+cate3,async:false});
             var res = JSON.parse(htmlobj.responseText);
-//            $("#cate2").html(res.html);
+            $("#cate4").html(res.html);
             $("#attr").html(res.attr);
         });
     });
