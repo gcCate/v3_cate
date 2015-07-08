@@ -78,7 +78,7 @@ function getAttr($cateid)
     //按属性、规格、交易属性区分、排序时必填属性考前
     $resArr['attr'] = $db->select('postatrribute', '*',
         array('AND'=>array('categoryId' => $cateid, ), 'ORDER' => 'keyAttr desc,order asc'));
-    return $resArr;
+    return $resArr['attr'];
 }
 //分类html
 function option($arr)
