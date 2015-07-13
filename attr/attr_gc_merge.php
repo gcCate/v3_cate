@@ -6,6 +6,7 @@
  * Time: 上午9:23
  * Desc: 将工厂网属性合并到阿里属性上 83019   923208173
  */
+die();
 error_reporting(E_ALL);
 ini_set('display_errors', 'ON');
 require "../lib/medoo.php";
