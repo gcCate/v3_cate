@@ -11,9 +11,12 @@
     $db = new medoo(array(
         'database_type' => 'mysql',
         'database_name' => 'v3_cate_ali',
-        'server'        => '192.168.8.18',
+//        'server'        => '192.168.8.18',
+//        'username'      => 'root',
+//        'password'      => 'gc7232275',
+        'server'        => 'localhost',
         'username'      => 'root',
-        'password'      => 'gc7232275',
+        'password'      => '123456',
         'port'          => 3306,
         'charset'       => 'utf8',
         'option'        => array(PDO::ATTR_CASE => PDO::CASE_NATURAL)
